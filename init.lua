@@ -538,7 +538,14 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        rust_analyzer = {},
+        rust_analyzer = {
+          on_attach = function(_, bufnr)
+            vim.lsp.inlay_hint.enable(bufnr)
+          end,
+          settings = {
+            ['rust_analyzer'] = {},
+          },
+        },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
