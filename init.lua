@@ -99,7 +99,7 @@ vim.g.maplocalleader = ' '
 vim.opt.number = true
 -- You can also add relative line numbers, for help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -117,6 +117,8 @@ vim.opt.breakindent = true
 
 -- Save undo history
 vim.opt.undofile = true
+
+vim.wo.foldmethod = 'expr'
 
 -- Case-insensitive searching UNLESS \C or capital in search
 vim.opt.ignorecase = true
@@ -146,7 +148,7 @@ vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 10
+vim.opt.scrolloff = 20
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -380,7 +382,6 @@ require('lazy').setup {
       vim.keymap.set('n', '<leader>/', function()
         -- You can pass additional configuration to telescope to change theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-          winblend = 10,
           previewer = false,
         })
       end, { desc = '[/] Fuzzily search in current buffer' })
@@ -537,7 +538,7 @@ require('lazy').setup {
         -- clangd = {},
         -- gopls = {},
         -- pyright = {},
-        -- rust_analyzer = {},
+        rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -546,7 +547,11 @@ require('lazy').setup {
         -- But for many setups, the LSP (`tsserver`) will work just fine
         -- tsserver = {},
         --
-
+        lemminx = {
+          settings = {
+            filetypes = { 'xml' },
+          },
+        },
         lua_ls = {
           -- cmd = {...},
           -- filetypes { ...},
@@ -725,13 +730,18 @@ require('lazy').setup {
     -- change the command in the config to whatever the name of that colorscheme is
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`
-    'folke/tokyonight.nvim',
+    'rose-pine/neovim',
+    name = 'rose-pine',
     lazy = false, -- make sure we load this during startup if it is your main colorscheme
     priority = 1000, -- make sure to load this before all the other start plugins
     config = function()
+      require('rose-pine').setup {
+        styles = {
+          transparency = true,
+        },
+      }
       -- Load the colorscheme here
-      vim.cmd.colorscheme 'tokyonight-night'
-
+      vim.cmd.colorscheme 'rose-pine'
       -- You can configure highlights by doing something like
       vim.cmd.hi 'Comment gui=none'
     end,
@@ -758,6 +768,8 @@ require('lazy').setup {
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
 
+      require('mini.pairs').setup()
+
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
       --  and try some other statusline plugin
@@ -779,7 +791,7 @@ require('lazy').setup {
 
       ---@diagnostic disable-next-line: missing-fields
       require('nvim-treesitter.configs').setup {
-        ensure_installed = { 'bash', 'c', 'html', 'lua', 'markdown', 'vim', 'vimdoc' },
+        ensure_installed = { 'bash', 'c', 'html', 'lua', 'markdown', 'vim', 'vimdoc', 'xml', 'rust' },
         -- Autoinstall languages that are not installed
         auto_install = true,
         highlight = { enable = true },
@@ -792,6 +804,66 @@ require('lazy').setup {
       --    - Incremental selection: Included, see :help nvim-treesitter-incremental-selection-mod
       --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+    end,
+  },
+
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim', 'nvim-telescope/telescope.nvim' },
+    config = function()
+      local harpoon = require 'harpoon'
+      harpoon:setup()
+      local conf = require('telescope.config').values
+      local function toggle_telescope(harpoon_files)
+        local file_paths = {}
+        for _, item in ipairs(harpoon_files.items) do
+          table.insert(file_paths, item.value)
+        end
+
+        require('telescope.pickers')
+          .new({}, {
+            prompt_title = 'Harpoon',
+            finder = require('telescope.finders').new_table {
+              results = file_paths,
+            },
+            previewer = conf.file_previewer {},
+            sorter = conf.generic_sorter {},
+          })
+          :find()
+      end
+
+      vim.keymap.set('n', '<leader>ht', function()
+        toggle_telescope(harpoon:list())
+      end, { desc = '[H]arpoon [T]oggle' })
+
+      vim.keymap.set('n', '<leader>haj', function()
+        harpoon:list():replace_at(1)
+      end, { desc = '[H]arpoon [A]dd to position [J]' })
+      vim.keymap.set('n', '<leader>hj', function()
+        harpoon:list():select(1)
+      end, { desc = '[H]arpoon select position [J]' })
+
+      vim.keymap.set('n', '<leader>hak', function()
+        harpoon:list():replace_at(2)
+      end, { desc = '[H]arpoon [A]dd to position [H]' })
+      vim.keymap.set('n', '<leader>hk', function()
+        harpoon:list():select(2)
+      end, { desc = '[H]arpoon select position [H]' })
+
+      vim.keymap.set('n', '<leader>hal', function()
+        harpoon:list():replace_at(3)
+      end, { desc = '[H]arpoon [A]dd to position [L]' })
+      vim.keymap.set('n', '<leader>hl', function()
+        harpoon:list():select(3)
+      end, { desc = '[H]arpoon select position [L]' })
+
+      vim.keymap.set('n', '<leader>ha;', function()
+        harpoon:list():replace_at(4)
+      end, { desc = '[H]arpoon [A]dd to position [;]' })
+      vim.keymap.set('n', '<leader>h;', function()
+        harpoon:list():select(4)
+      end, { desc = '[H]arpoon select position [;]' })
     end,
   },
 
