@@ -223,6 +223,23 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
+vim.api.nvim_create_autocmd('VimEnter', {
+  callback = function()
+    vim.cmd 'packadd! cfilter'
+  end,
+})
+
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'xml',
+  callback = function()
+    vim.opt_local.tabstop = 2
+    vim.opt_local.shiftwidth = 2
+    vim.opt_local.softtabstop = 2
+    vim.opt_local.expandtab = true
+    -- vim.opt_local.foldmethod = 'indent'
+  end,
+})
+
 vim.api.nvim_create_autocmd('FileType', {
   pattern = { 'help' },
   desc = 'Open help in vsplit',
@@ -814,6 +831,30 @@ require('lazy').setup({
     -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if you prefer nvim-web-devicons
     -- Lazy loading is not recommended because it is very tricky to make it work correctly in all situations.
     lazy = false,
+  },
+  {
+    'kevinhwang91/nvim-ufo',
+    dependencies = {
+      { 'kevinhwang91/promise-async' },
+    },
+    config = function()
+      vim.o.foldcolumn = '0' -- '0' is not bad
+      vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
+      vim.o.foldlevelstart = 99
+      vim.o.foldenable = true
+
+      -- Using ufo provider need remap `zR` and `zM`. If Neovim is 0.6.1, remap yourself
+      vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
+      vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
+
+      -- ufo uses the same query files for folding (queries/<lang>/folds.scm)
+      -- performance and stability are better than `foldmethod=nvim_treesitter#foldexpr()`
+      require('ufo').setup {
+        provider_selector = function(bufnr, filetype, buftype)
+          return { 'treesitter', 'indent' }
+        end,
+      }
+    end,
   },
 
   { -- Autocompletion
