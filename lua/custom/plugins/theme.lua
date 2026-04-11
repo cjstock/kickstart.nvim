@@ -1,6 +1,10 @@
-local theme_file = vim.fn.expand '~/.config/omarchy/current/theme/neovim.lua'
+-- Loads the current omarchy theme spec and watches for theme changes.
+-- On theme change (detected via libuv fs_event on ~/.config/omarchy/current/),
+-- fires User LazyReload, which custom.plugins.omarchy_theme_hotreload handles.
 
--- helper: copy opts except some keys
+local theme_file = vim.fn.expand '~/.config/omarchy/current/theme/neovim.lua'
+local watch_dir = vim.fn.expand '~/.config/omarchy/current/'
+
 local function without(tbl, ...)
   local copy, skip = {}, {}
   for _, k in ipairs { ... } do
@@ -14,17 +18,10 @@ local function without(tbl, ...)
   return copy
 end
 
-if vim.fn.filereadable(theme_file) == 1 then
-  local spec = dofile(theme_file)
-
-  -- normalize: ensure always a list of plugins
-  if spec[1] and type(spec[1]) == 'string' then
-    spec = { spec }
-  end
-
-  local cleaned = {}
-  local lazyvim_opts = {}
-
+-- Strip the LazyVim/LazyVim marker entry (kickstart can't load it) and return
+-- the remaining plugin specs plus the colorscheme name extracted from its opts.
+local function clean_spec(spec)
+  local cleaned, lazyvim_opts = {}, {}
   for _, plugin in ipairs(spec) do
     if plugin[1] == 'LazyVim/LazyVim' then
       lazyvim_opts = plugin.opts or {}
@@ -32,37 +29,39 @@ if vim.fn.filereadable(theme_file) == 1 then
       table.insert(cleaned, plugin)
     end
   end
+  return cleaned, lazyvim_opts.colorscheme, without(lazyvim_opts, 'colorscheme')
+end
 
-  local colorscheme = lazyvim_opts.colorscheme
-  local rest_opts = without(lazyvim_opts, 'colorscheme')
-
-  -- Special cases: ensure Catppuccin or Tokyonight plugin is included if missing
-  if colorscheme and colorscheme:match '^catppuccin' then
-    local found = false
-    for _, p in ipairs(cleaned) do
-      if p[1]:match 'catppuccin' then
-        found = true
-        break
-      end
-    end
-    if not found then
-      table.insert(cleaned, { 'catppuccin/nvim', name = 'catppuccin' })
-    end
-  elseif colorscheme == 'tokyonight' then
-    local found = false
-    for _, p in ipairs(cleaned) do
-      if p[1]:match 'tokyonight' then
-        found = true
-        break
-      end
-    end
-    if not found then
-      table.insert(cleaned, { 'folke/tokyonight.nvim' })
-    end
+-- Fire User LazyReload on theme change. Watch the parent directory so the
+-- watcher survives omarchy's atomic `rm -rf current/theme && mv next-theme
+-- current/theme` swap (which would invalidate a single-file watch).
+local fs_event
+local function arm_watcher()
+  if fs_event then
+    fs_event:stop()
+    fs_event:close()
   end
+  fs_event = vim.uv.new_fs_event()
+  if not fs_event then
+    return
+  end
+  fs_event:start(watch_dir, { recursive = false }, function(err, filename, _events)
+    if err or filename ~= 'theme.name' then
+      return
+    end
+    vim.schedule(function()
+      vim.api.nvim_exec_autocmds('User', { pattern = 'LazyReload', modeline = false })
+      arm_watcher()
+    end)
+  end)
+end
+arm_watcher()
+
+if vim.fn.filereadable(theme_file) == 1 then
+  local spec = dofile(theme_file)
+  local cleaned, colorscheme, rest_opts = clean_spec(spec)
 
   local function set_theme()
-    -- special handling for catppuccin / tokyonight setup
     if next(rest_opts) and colorscheme then
       local theme_name = colorscheme:gsub('%-.*', '')
       if theme_name == 'catppuccin' or theme_name == 'tokyonight' then
@@ -72,23 +71,17 @@ if vim.fn.filereadable(theme_file) == 1 then
         end
       end
     end
-
-    -- apply colorscheme unless first plugin has its own config
     local first = cleaned[1]
     if (not first or type(first.config) ~= 'function') and colorscheme then
       pcall(vim.cmd.colorscheme, colorscheme)
     end
   end
 
-  vim.api.nvim_create_autocmd('VimEnter', {
-    once = true,
-    callback = set_theme,
-  })
-
+  vim.api.nvim_create_autocmd('VimEnter', { once = true, callback = set_theme })
   return cleaned
 end
 
--- fallback if no theme symlink
+-- Fallback: no omarchy theme file present.
 return {
   {
     'ellisonleao/gruvbox.nvim',
