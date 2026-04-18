@@ -25,7 +25,14 @@ local plugins = {
   { src = gh('nvim-telescope/telescope-ui-select.nvim') },
   { src = gh('nvim-telescope/telescope-live-grep-args.nvim'), version = vim.version.range('^1.1.0') },
 
-  -- LSP helpers (no nvim-lspconfig; LSP configs live in ~/.config/nvim/lsp/)
+  -- Completion
+  { src = gh('saghen/blink.cmp'), version = vim.version.range('^1') },
+
+  -- LSP helpers
+  { src = gh('mason-org/mason.nvim') },
+  { src = gh('neovim/nvim-lspconfig') },
+  { src = gh('mason-org/mason-lspconfig.nvim') },
+  { src = gh('WhoIsSethDaniel/mason-tool-installer.nvim') },
   { src = gh('folke/lazydev.nvim') },
   { src = gh('j-hui/fidget.nvim') },
 

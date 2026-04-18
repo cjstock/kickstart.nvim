@@ -1,4 +1,21 @@
-vim.lsp.enable({ 'lua_ls', 'rust_analyzer' })
+require('mason').setup()
+
+require('mason-tool-installer').setup({
+  ensure_installed = {
+    'lua_ls',
+    'rust_analyzer',
+    'bashls',
+    'dockerls',
+    'postgres-language-server',
+    'marksman',
+    'yamlls',
+    'stylua',
+  },
+})
+
+require('mason-lspconfig').setup({
+  automatic_enable = true,
+})
 
 vim.diagnostic.config({
   severity_sort = true,
@@ -56,14 +73,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
       map('<leader>th', function()
         vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
       end, '[T]oggle Inlay [H]ints')
-    end
-
-    if client:supports_method(vim.lsp.protocol.Methods.textDocument_completion, event.buf) then
-      vim.lsp.completion.enable(true, client.id, event.buf, { autotrigger = true })
-    end
-
-    if client:supports_method('textDocument/inlineCompletion', event.buf) then
-      pcall(vim.lsp.inline_completion.enable)
     end
 
     if client:supports_method(vim.lsp.protocol.Methods.textDocument_foldingRange, event.buf) then

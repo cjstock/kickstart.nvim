@@ -1,20 +1,28 @@
-vim.opt.completeopt = { 'menu', 'menuone', 'noinsert', 'noselect', 'fuzzy', 'popup' }
-vim.opt.shortmess:append('c')
+require('blink.cmp').setup({
+  keymap = {
+    preset = 'default',
+  },
 
-vim.keymap.set({ 'i', 's' }, '<Tab>', function()
-  if vim.snippet.active({ direction = 1 }) then
-    return '<Cmd>lua vim.snippet.jump(1)<CR>'
-  end
-  return '<Tab>'
-end, { expr = true })
+  appearance = {
+    nerd_font_variant = 'mono',
+  },
 
-vim.keymap.set({ 'i', 's' }, '<S-Tab>', function()
-  if vim.snippet.active({ direction = -1 }) then
-    return '<Cmd>lua vim.snippet.jump(-1)<CR>'
-  end
-  return '<S-Tab>'
-end, { expr = true })
+  completion = {
+    documentation = { auto_show = true, auto_show_delay_ms = 500 },
+  },
 
-vim.keymap.set('i', '<C-Space>', function()
-  vim.lsp.completion.get()
-end)
+  sources = {
+    default = { 'lsp', 'path', 'snippets', 'lazydev', 'buffer' },
+    providers = {
+      lazydev = { module = 'lazydev.integrations.blink', score_offset = 100 },
+      dadbod = { name = 'Dadbod', module = 'vim_dadbod_completion.blink' },
+    },
+    per_filetype = {
+      sql = { 'snippets', 'dadbod', 'buffer' },
+    },
+  },
+
+  fuzzy = { implementation = 'lua' },
+
+  signature = { enabled = true },
+})
