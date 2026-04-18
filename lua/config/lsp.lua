@@ -10,6 +10,7 @@ require('mason-tool-installer').setup({
     'marksman',
     'yamlls',
     'stylua',
+    'codelldb',
   },
 })
 
@@ -39,15 +40,15 @@ vim.api.nvim_create_autocmd('LspAttach', {
       mode = mode or 'n'
       vim.keymap.set(mode, keys, func, { buf = event.buf, desc = 'LSP: ' .. desc })
     end
-    local tb = require('telescope.builtin')
+    local fzf = require('fzf-lua')
 
-    map('grr', tb.lsp_references, '[G]oto [R]eferences')
-    map('gri', tb.lsp_implementations, '[G]oto [I]mplementation')
-    map('grd', tb.lsp_definitions, '[G]oto [D]efinition')
+    map('grr', fzf.lsp_references, '[G]oto [R]eferences')
+    map('gri', fzf.lsp_implementations, '[G]oto [I]mplementation')
+    map('grd', fzf.lsp_definitions, '[G]oto [D]efinition')
     map('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-    map('grt', tb.lsp_type_definitions, '[G]oto [T]ype Definition')
-    map('gO', tb.lsp_document_symbols, 'Open Document Symbols')
-    map('gW', tb.lsp_dynamic_workspace_symbols, 'Open Workspace Symbols')
+    map('grt', fzf.lsp_typedefs, '[G]oto [T]ype Definition')
+    map('gO', fzf.lsp_document_symbols, 'Open Document Symbols')
+    map('gW', fzf.lsp_live_workspace_symbols, 'Open Workspace Symbols')
 
     local client = vim.lsp.get_client_by_id(event.data.client_id)
     if not client then return end

@@ -20,10 +20,8 @@ local plugins = {
   { src = gh('folke/which-key.nvim') },
   { src = gh('stevearc/oil.nvim') },
 
-  -- Telescope
-  { src = gh('nvim-telescope/telescope.nvim') },
-  { src = gh('nvim-telescope/telescope-ui-select.nvim') },
-  { src = gh('nvim-telescope/telescope-live-grep-args.nvim'), version = vim.version.range('^1.1.0') },
+  -- Fuzzy finder
+  { src = gh('ibhagwan/fzf-lua') },
 
   -- Completion
   { src = gh('saghen/blink.cmp'), version = vim.version.range('^1') },
@@ -35,6 +33,11 @@ local plugins = {
   { src = gh('WhoIsSethDaniel/mason-tool-installer.nvim') },
   { src = gh('folke/lazydev.nvim') },
   { src = gh('j-hui/fidget.nvim') },
+
+  -- Debugging (DAP)
+  { src = gh('mfussenegger/nvim-dap') },
+  { src = gh('igorlfs/nvim-dap-view') },
+  { src = gh('jay-babu/mason-nvim-dap.nvim') },
 
   -- Formatting
   { src = gh('stevearc/conform.nvim') },

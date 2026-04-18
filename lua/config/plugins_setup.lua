@@ -61,39 +61,33 @@ require('which-key').setup({
     { '<leader>s', group = '[S]earch' },
     { '<leader>t', group = '[T]oggle' },
     { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+    { '<leader>d', group = '[D]ebug' },
   },
 })
 
--- telescope
-local telescope = require('telescope')
-telescope.setup({
-  defaults = { file_ignore_patterns = { '%.woff2', '%.ttf' } },
-  extensions = {
-    ['ui-select'] = { require('telescope.themes').get_dropdown() },
-  },
+-- fzf-lua
+local fzf = require('fzf-lua')
+fzf.setup({
+  'default',
+  files = { file_ignore_patterns = { '%.woff2', '%.ttf' } },
+  grep = { file_ignore_patterns = { '%.woff2', '%.ttf' } },
 })
-pcall(telescope.load_extension, 'ui-select')
-pcall(telescope.load_extension, 'live_grep_args')
+fzf.register_ui_select()
 
-local tb = require('telescope.builtin')
-vim.keymap.set('n', '<leader>sh', tb.help_tags, { desc = '[S]earch [H]elp' })
-vim.keymap.set('n', '<leader>sk', tb.keymaps, { desc = '[S]earch [K]eymaps' })
-vim.keymap.set('n', '<leader>sf', tb.find_files, { desc = '[S]earch [F]iles' })
-vim.keymap.set('n', '<leader>ss', tb.builtin, { desc = '[S]earch [S]elect Telescope' })
-vim.keymap.set('n', '<leader>sw', tb.grep_string, { desc = '[S]earch current [W]ord' })
-vim.keymap.set('n', '<leader>sg', ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>", { desc = '[S]earch by [G]rep' })
-vim.keymap.set('n', '<leader>sd', tb.diagnostics, { desc = '[S]earch [D]iagnostics' })
-vim.keymap.set('n', '<leader>sr', tb.resume, { desc = '[S]earch [R]esume' })
-vim.keymap.set('n', '<leader>s.', tb.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-vim.keymap.set('n', '<leader><leader>', tb.buffers, { desc = '[ ] Find existing buffers' })
-vim.keymap.set('n', '<leader>/', function()
-  tb.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown({ winblend = 10, previewer = false }))
-end, { desc = '[/] Fuzzily search in current buffer' })
-vim.keymap.set('n', '<leader>s/', function()
-  tb.live_grep({ grep_open_files = true, prompt_title = 'Live Grep in Open Files' })
-end, { desc = '[S]earch [/] in Open Files' })
+vim.keymap.set('n', '<leader>sh', fzf.helptags, { desc = '[S]earch [H]elp' })
+vim.keymap.set('n', '<leader>sk', fzf.keymaps, { desc = '[S]earch [K]eymaps' })
+vim.keymap.set('n', '<leader>sf', fzf.files, { desc = '[S]earch [F]iles' })
+vim.keymap.set('n', '<leader>ss', fzf.builtin, { desc = '[S]earch [S]elect fzf-lua' })
+vim.keymap.set('n', '<leader>sw', fzf.grep_cword, { desc = '[S]earch current [W]ord' })
+vim.keymap.set('n', '<leader>sg', fzf.live_grep, { desc = '[S]earch by [G]rep (use `--` for rg flags)' })
+vim.keymap.set('n', '<leader>sd', fzf.diagnostics_workspace, { desc = '[S]earch [D]iagnostics' })
+vim.keymap.set('n', '<leader>sr', fzf.resume, { desc = '[S]earch [R]esume' })
+vim.keymap.set('n', '<leader>s.', fzf.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+vim.keymap.set('n', '<leader><leader>', fzf.buffers, { desc = '[ ] Find existing buffers' })
+vim.keymap.set('n', '<leader>/', fzf.lgrep_curbuf, { desc = '[/] Fuzzily search in current buffer' })
+vim.keymap.set('n', '<leader>s/', fzf.lines, { desc = '[S]earch [/] in Open Files' })
 vim.keymap.set('n', '<leader>sn', function()
-  tb.find_files({ cwd = vim.fn.stdpath('config') })
+  fzf.files({ cwd = vim.fn.stdpath('config') })
 end, { desc = '[S]earch [N]eovim files' })
 
 -- lazydev
