@@ -1,6 +1,6 @@
 require('mason').setup()
 
-require('mason-tool-installer').setup({
+require('mason-tool-installer').setup {
   ensure_installed = {
     'lua_ls',
     'rust_analyzer',
@@ -11,16 +11,19 @@ require('mason-tool-installer').setup({
     'yamlls',
     'stylua',
     'codelldb',
+    'html',
+    'htmx',
+    'texlab',
   },
-})
+}
 
-require('mason-lspconfig').setup({
+require('mason-lspconfig').setup {
   automatic_enable = true,
-})
+}
 
-vim.diagnostic.config({
+vim.diagnostic.config {
   severity_sort = true,
-  float = { border = 'rounded', source = 'if_many' },
+  float = { border = 'rounded', source = 'if_many', max_width = 80 },
   underline = { severity = vim.diagnostic.severity.ERROR },
   signs = vim.g.have_nerd_font and {
     text = {
@@ -30,8 +33,9 @@ vim.diagnostic.config({
       [vim.diagnostic.severity.HINT] = '󰌶 ',
     },
   } or {},
-  virtual_text = { source = 'if_many', spacing = 2 },
-})
+  virtual_text = false,
+}
+
 
 vim.api.nvim_create_autocmd('LspAttach', {
   group = vim.api.nvim_create_augroup('user-lsp-attach', { clear = true }),
@@ -40,7 +44,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
       mode = mode or 'n'
       vim.keymap.set(mode, keys, func, { buf = event.buf, desc = 'LSP: ' .. desc })
     end
-    local fzf = require('fzf-lua')
+    local fzf = require 'fzf-lua'
 
     map('grr', fzf.lsp_references, '[G]oto [R]eferences')
     map('gri', fzf.lsp_implementations, '[G]oto [I]mplementation')
@@ -51,28 +55,34 @@ vim.api.nvim_create_autocmd('LspAttach', {
     map('gW', fzf.lsp_live_workspace_symbols, 'Open Workspace Symbols')
 
     local client = vim.lsp.get_client_by_id(event.data.client_id)
-    if not client then return end
+    if not client then
+      return
+    end
 
     if client:supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
       local hl = vim.api.nvim_create_augroup('user-lsp-highlight', { clear = false })
       vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-        buffer = event.buf, group = hl, callback = vim.lsp.buf.document_highlight,
+        buffer = event.buf,
+        group = hl,
+        callback = vim.lsp.buf.document_highlight,
       })
       vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
-        buffer = event.buf, group = hl, callback = vim.lsp.buf.clear_references,
+        buffer = event.buf,
+        group = hl,
+        callback = vim.lsp.buf.clear_references,
       })
       vim.api.nvim_create_autocmd('LspDetach', {
         group = vim.api.nvim_create_augroup('user-lsp-detach', { clear = true }),
         callback = function(ev2)
           vim.lsp.buf.clear_references()
-          vim.api.nvim_clear_autocmds({ group = 'user-lsp-highlight', buffer = ev2.buf })
+          vim.api.nvim_clear_autocmds { group = 'user-lsp-highlight', buffer = ev2.buf }
         end,
       })
     end
 
     if client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
       map('<leader>th', function()
-        vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
+        vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
       end, '[T]oggle Inlay [H]ints')
     end
 
